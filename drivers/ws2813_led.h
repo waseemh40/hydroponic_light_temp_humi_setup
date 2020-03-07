@@ -23,12 +23,15 @@ void decode_rgb_mode(void);
 void precise_delay(int count);
 uint32_t convert_inten_pixel(uint8_t g_inten,uint8_t r_inten,uint8_t b_inten);
 
-#define G_INTEN_MAX		130
+#define G_INTEN_MAX		250
 #define G_INTEN_MIN		0
-#define R_INTEN_MAX		130
+#define G_INTEN_DEF		130
+#define R_INTEN_MAX		250
 #define R_INTEN_MIN		0
-#define B_INTEN_MAX		130
+#define R_INTEN_DEF		250
+#define B_INTEN_MAX		250
 #define B_INTEN_MIN		0
+#define B_INTEN_DEF		250
 #define INTEN_STEP		10
 
 

@@ -24,18 +24,26 @@ volatile 	uint32_t	rgb_pixel=0x00FFFFFF;
 typedef enum {	g_config=0,
 				r_config,
 				b_config,
+				cycle,
+				hours_offset,
 				display
 			}menu_mode_t;
+typedef enum {	hrs=0,
+				min,
+				temp,
+				humi
+			}time_data_t;
 
 			menu_mode_t menu_mode=display,last_menu_mode=display;
 			uint8_t		sub_menu=0;
-			uint8_t		g_inten=G_INTEN_MAX,r_inten=R_INTEN_MIN,b_inten=B_INTEN_MIN;
+			uint8_t		g_inten=G_INTEN_DEF,r_inten=R_INTEN_DEF,b_inten=B_INTEN_DEF;		//default values
 			bool		right_pressed=false;
-			uint8_t		time_data=0;
+			time_data_t	time_data=temp;		//display temp by default
 				//time related
 volatile	uint8_t		sample_counter=0;
 volatile	uint64_t	seconds=0;
 volatile	uint8_t		mins=0,hours=0;
+volatile	uint8_t		running_cycle=12;		//default value of 12 hrs
 
 volatile	dht_data_t 	dht_data;
 			bool		read_dht=false;
@@ -104,11 +112,13 @@ int main(void)
 			sprintf(rs232_buf,"iA will work\n");
 			debug_str(rs232_buf);
 
+			rgb_pixel=convert_inten_pixel(g_inten,r_inten,b_inten);
+			chalo_batti( rgb_pixel);
+
 			while (1) {
 				if(sampler_timer_flag)
 					{
-						rgb_pixel=convert_inten_pixel(g_inten,r_inten,b_inten);
-						chalo_batti( rgb_pixel);
+
 						sampler_timer_flag=false;
 
 						sample_counter++;
@@ -126,6 +136,15 @@ int main(void)
 							}
 							if(seconds%3600==0){
 								hours++;
+								if(hours>23){
+									hours=0;
+									rgb_pixel=convert_inten_pixel(g_inten,r_inten,b_inten);
+									chalo_batti( rgb_pixel);
+								}
+								if(hours>=running_cycle){
+									rgb_pixel=convert_inten_pixel(G_INTEN_MIN,R_INTEN_MIN,B_INTEN_MIN);
+									chalo_batti( rgb_pixel);
+								}
 							}
 						}
 
@@ -217,22 +236,22 @@ void menu_system(void){
 				}
 				right_pressed=false;
 			}
-			if(time_data==0){
+			if(time_data==hrs){
 				sprintf((const char *)lcd_buf,"Hours");
 				SegmentLCD_Write((const char *)lcd_buf);
 				SegmentLCD_Number(hours);
 			}
-			else if(time_data==1){
+			else if(time_data==min){
 				sprintf((const char *)lcd_buf,"Mins");
 				SegmentLCD_Write((const char *)lcd_buf);
 				SegmentLCD_Number(mins);
 			}
-			else if(time_data==2){
+			else if(time_data==temp){
 				sprintf((const char *)lcd_buf,"Temp.");
 				SegmentLCD_Write((const char *)lcd_buf);
 				SegmentLCD_Number(temp_val);
 			}
-			else if(time_data==3){
+			else if(time_data==humi){
 				sprintf((const char *)lcd_buf,"Humi");
 				SegmentLCD_Write((const char *)lcd_buf);
 				SegmentLCD_Number(hum_val);
@@ -241,6 +260,37 @@ void menu_system(void){
 				SegmentLCD_Write((const char *)"Invalid");
 				time_data=0;
 			}
+			break;
+		case cycle:
+			if(right_pressed){
+				if(running_cycle==12){
+					running_cycle=16;
+				}
+				else if(running_cycle==16){
+					running_cycle=12;
+				}
+				else{
+					;
+				}
+				right_pressed=false;
+			}
+			SegmentLCD_AllOff();
+			sprintf((const char *)lcd_buf,"LED_cyc.");
+			SegmentLCD_Write((const char *)lcd_buf);
+			SegmentLCD_Number(running_cycle);
+			break;
+		case hours_offset:
+			if(right_pressed){
+				hours+=1;
+				if(hours>23){
+					hours=0;
+				}
+				right_pressed=false;
+			}
+			SegmentLCD_AllOff();
+			sprintf((const char *)lcd_buf,"Hrs_off.");
+			SegmentLCD_Write((const char *)lcd_buf);
+			SegmentLCD_Number(hours);
 			break;
 		default:
 			menu_mode=display;
