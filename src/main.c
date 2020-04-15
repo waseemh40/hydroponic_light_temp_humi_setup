@@ -204,7 +204,7 @@ int main(void)
 							debug_str(rs232_buf);
 							read_dht=false;
 							//avergae related
-							if(seconds==1800){		//30 minutes sampling
+							if(seconds%1800==0){		//30 minutes sampling
 									//temperature related
 								temp_avg_c+=temp_val;
 								if(temp_min_c>temp_val){
