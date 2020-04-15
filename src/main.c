@@ -229,7 +229,7 @@ int main(void)
 			debug_str(rs232_buf);
 
 			rgb_pixel=convert_inten_pixel(g_inten,r_inten,b_inten);
-			chalo_batti( rgb_pixel);
+			chalo_batti(rgb_pixel);
 
 			while (1) {
 				if(sampler_timer_flag)
@@ -241,18 +241,35 @@ int main(void)
 						if(sample_counter>=10){
 							sample_counter=0;
 							seconds++;
-							if(seconds%2==0){
-								read_dht=true;
-							}
-							if(seconds%60==0){
+							if(seconds>59){
+								seconds=0;
 								mins++;
 								if(mins>59){
 									mins=0;
+									hours++;
+									if(hours>23){
+										hours=0;
+										days_count++;
+											//update temp. & humi. display values
+										temp_avg_d=(uint64_t)(temp_avg_c/AVERAGE_SAMPLES);
+										temp_max_d=(uint64_t)(temp_max_c);
+										temp_min_d=(uint64_t)(temp_min_c);
+										temp_avg_c=0;
+										temp_max_c=0;
+										temp_min_c=0;
+										humi_avg_d=(uint64_t)(humi_avg_c/AVERAGE_SAMPLES);
+										humi_max_d=(uint64_t)(humi_max_c);
+										humi_min_d=(uint64_t)(humi_min_c);
+										humi_avg_c=0;
+										humi_max_c=0;
+										humi_min_c=0;
+
+									}
 								}
 										//update the led on next minute after start/time adjustment...
 								if(hours < led_start_time || hours >= (led_start_time+running_cycle)){
 									rgb_pixel=convert_inten_pixel(G_INTEN_MIN,R_INTEN_MIN,B_INTEN_MIN);
-									chalo_batti( rgb_pixel);
+									chalo_batti(rgb_pixel);
 								}
 								else{
 									rgb_pixel=convert_inten_pixel(g_inten,r_inten,b_inten);
@@ -260,29 +277,10 @@ int main(void)
 								}
 								time_formatted=(hours*100)+mins;
 							}
-							if(seconds%3600==0){
-								hours++;
-								if(hours>23){
-									hours=0;
-									days_count++;
-										//update temp. & humi. display values
-									temp_avg_d=(uint64_t)(temp_avg_c/AVERAGE_SAMPLES);
-									temp_max_d=(uint64_t)(temp_max_c);
-									temp_min_d=(uint64_t)(temp_min_c);
-									temp_avg_c=0;
-									temp_max_c=0;
-									temp_min_c=0;
-									humi_avg_d=(uint64_t)(humi_avg_c/AVERAGE_SAMPLES);
-									humi_max_d=(uint64_t)(humi_max_c);
-									humi_min_d=(uint64_t)(humi_min_c);
-									humi_avg_c=0;
-									humi_max_c=0;
-									humi_min_c=0;
-
-								}
+							if(seconds%2==0){
+								read_dht=true;
 							}
 						}
-
 
 						if(read_dht){
 							dht_data.hum_dec=0;
@@ -293,11 +291,11 @@ int main(void)
 							dht_data=dht_read_iA();
 							humi_current= ((uint32_t)((dht_data.hum_int<< 8) + dht_data.hum_dec));///(float)10.0);
 							temp_current= ((uint32_t)((dht_data.temp_int << 8) + dht_data.temp_dec));///(float)10.0);
-							uint64_t sum=dht_data.hum_dec+dht_data.hum_int+dht_data.temp_int+dht_data.temp_dec;
+							/*uint64_t sum=dht_data.hum_dec+dht_data.hum_int+dht_data.temp_int+dht_data.temp_dec;
 							sprintf(rs232_buf,"H_I=%2d H_D=%2d T_I=%2d T_D=%2d S=%d %4x C=%2x \t hum_val=%3d \t temp_val=%3d",dht_data.hum_int,dht_data.hum_dec,dht_data.temp_int,dht_data.temp_dec,sum,sum,dht_data.checksum,humi_current,temp_current);
 							debug_str(rs232_buf);
 							sprintf(rs232_buf,"Pixel mode=%2x\n",menu_mode);
-							debug_str(rs232_buf);
+							debug_str(rs232_buf);*/
 							read_dht=false;
 							//avergae related
 							if(seconds%1800==0){		//30 minutes sampling
@@ -309,7 +307,7 @@ int main(void)
 								if(temp_max_c<temp_current){
 									temp_max_c=temp_current;
 								}
-									//temperature related
+									//humidity related
 								humi_avg_c+=humi_current;
 								if(humi_min_c>humi_current){
 									humi_min_c=humi_current;
@@ -367,14 +365,14 @@ void menu_display(void){
 			break;
 		case adj_mm:
 			SegmentLCD_AllOff();
-			sprintf((const char *)lcd_buf,"Min_off.");
+			sprintf((const char *)lcd_buf,"Mins_off.");
 			SegmentLCD_Write((const char *)lcd_buf);
 			SegmentLCD_Number(mins);
 			break;
 		case adj_led_start_time:
 			SegmentLCD_AllOff();
 			SegmentLCD_AllOff();
-			sprintf((const char *)lcd_buf,"Start_off");
+			sprintf((const char *)lcd_buf,"Start_off.");
 			SegmentLCD_Write((const char *)lcd_buf);
 			SegmentLCD_Number(led_start_time);
 			break;
@@ -394,7 +392,7 @@ void menu_display(void){
 				SegmentLCD_Number(time_formatted);
 				break;
 			case sm_led_start_time:
-				sprintf((const char *)lcd_buf,"Start_time.");
+				sprintf((const char *)lcd_buf,"Start_time");
 				SegmentLCD_Write((const char *)lcd_buf);
 				SegmentLCD_Number(led_start_time);
 				break;

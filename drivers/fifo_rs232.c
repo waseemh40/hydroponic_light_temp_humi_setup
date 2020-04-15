@@ -66,7 +66,7 @@ bool fifo_rs232_is_full(fifo_rs232_type_t fifo_type){
 }
 
 char fifo_rs232_remove(fifo_rs232_type_t fifo_type){
-	char temp_data;
+	char temp_data=0;
 	switch (fifo_type){
 	case fifo_rx_data:{
 		if (fifo_rx_size>0){
