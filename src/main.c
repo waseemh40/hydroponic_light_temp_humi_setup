@@ -66,10 +66,10 @@ volatile	dht_data_t 	dht_data;
 
 			//average, max. & min. temp. and humidity related parameters
 volatile	uint64_t	temp_avg_c=0;
-volatile	uint64_t	temp_min_c=0;
+volatile	uint64_t	temp_min_c=500;
 volatile	uint64_t	temp_max_c=0;
 volatile	uint64_t	humi_avg_c=0;
-volatile	uint64_t	humi_min_c=0;
+volatile	uint64_t	humi_min_c=500;
 volatile	uint64_t	humi_max_c=0;
 volatile	uint64_t	temp_avg_d=0;
 volatile	uint64_t	temp_min_d=0;
@@ -256,15 +256,21 @@ int main(void)
 										temp_min_d=(uint64_t)(temp_min_c);
 										temp_avg_c=0;
 										temp_max_c=0;
-										temp_min_c=0;
+										temp_min_c=500;
 										humi_avg_d=(uint64_t)(humi_avg_c/AVERAGE_SAMPLES);
 										humi_max_d=(uint64_t)(humi_max_c);
 										humi_min_d=(uint64_t)(humi_min_c);
 										humi_avg_c=0;
 										humi_max_c=0;
-										humi_min_c=0;
+										humi_min_c=500;
 
 									}
+								}
+										// temperature and humidity averaging
+								if(mins==30){				//30 minutes sampling
+									temp_avg_c+=temp_current;
+									humi_avg_c+=humi_current;
+
 								}
 										//update the led on next minute after start/time adjustment...
 								if(hours < led_start_time || hours >= (led_start_time+running_cycle)){
@@ -297,25 +303,18 @@ int main(void)
 							sprintf(rs232_buf,"Pixel mode=%2x\n",menu_mode);
 							debug_str(rs232_buf);*/
 							read_dht=false;
-							//avergae related
-							if(seconds%1800==0){		//30 minutes sampling
-									//temperature related
-								temp_avg_c+=temp_current;
-								if(temp_min_c>temp_current){
-									temp_min_c=temp_current;
-								}
-								if(temp_max_c<temp_current){
-									temp_max_c=temp_current;
-								}
-									//humidity related
-								humi_avg_c+=humi_current;
-								if(humi_min_c>humi_current){
-									humi_min_c=humi_current;
-								}
-								if(humi_max_c<humi_current){
-									humi_max_c=humi_current;
-								}
-
+								//max. and min. values
+							if(humi_min_c>humi_current){
+								humi_min_c=humi_current;
+							}
+							if(humi_max_c<humi_current){
+								humi_max_c=humi_current;
+							}
+							if(temp_min_c>temp_current){
+								temp_min_c=temp_current;
+							}
+							if(temp_max_c<temp_current){
+								temp_max_c=temp_current;
 							}
 						}
 							//menu related update
