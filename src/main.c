@@ -19,6 +19,7 @@ void 	menu_display(void);
  */
 volatile 	bool		sampler_timer_flag=false;
 volatile 	uint32_t	rgb_pixel=0x00FFFFFF;
+volatile 	uint32_t	grb_pixel=0x00FFFFFF;
 
 		//menu related
 typedef enum {	d_time=0,
@@ -69,7 +70,7 @@ volatile	uint64_t	temp_avg_c=0;
 volatile	uint64_t	temp_min_c=500;
 volatile	uint64_t	temp_max_c=0;
 volatile	uint64_t	humi_avg_c=0;
-volatile	uint64_t	humi_min_c=500;
+volatile	uint64_t	humi_min_c=1000;
 volatile	uint64_t	humi_max_c=0;
 volatile	uint64_t	temp_avg_d=0;
 volatile	uint64_t	temp_min_d=0;
@@ -77,6 +78,7 @@ volatile	uint64_t	temp_max_d=0;
 volatile	uint64_t	humi_avg_d=0;
 volatile	uint64_t	humi_min_d=0;
 volatile	uint64_t	humi_max_d=0;
+volatile	uint8_t		n_samples_avg=0;
 
 
 			char 		rs232_buf[128];
@@ -156,11 +158,11 @@ void 	inc_dec_irq_handler(uint8_t irq_number){
 			}
 			break;
 		case adj_cycle:
-			if(running_cycle==12){
-				running_cycle=14;
+			if(running_cycle==14){
+				running_cycle=16;
 			}
 			else{
-				running_cycle=12;
+				running_cycle=14;
 			}
 			break;
 		case adj_led_start_time:
@@ -223,14 +225,15 @@ int main(void)
 			GPIO_PinOutSet(OUT_PORT, LED_2);
 
 			GPIO_PinOutClear(OUT_PORT, LED_2);
-			GPIO_PinOutSet(OUT_PORT, LED);
+			GPIO_PinOutClear(OUT_PORT, LED);
 			SegmentLCD_Write((const char *)"HELLO");
 			sprintf(rs232_buf,"iA will work\n");
 			debug_str(rs232_buf);
 
-			rgb_pixel=convert_inten_pixel(g_inten,r_inten,b_inten);
-			chalo_batti(rgb_pixel);
-
+			grb_pixel=convert_inten_pixel(g_inten,r_inten,b_inten);
+			chalo_batti(grb_pixel);
+			rgb_pixel=convert_inten_pixel(r_inten,g_inten,b_inten);
+			chalo_batti_2(rgb_pixel);
 			while (1) {
 				if(sampler_timer_flag)
 					{
@@ -244,6 +247,13 @@ int main(void)
 							if(seconds>59){
 								seconds=0;
 								mins++;
+										// temperature and humidity averaging. 30 min sampling
+								if(mins==30 || mins==59){
+									temp_avg_c+=temp_current;
+									humi_avg_c+=humi_current;
+									n_samples_avg++;
+
+								}
 								if(mins>59){
 									mins=0;
 									hours++;
@@ -251,35 +261,34 @@ int main(void)
 										hours=0;
 										days_count++;
 											//update temp. & humi. display values
-										temp_avg_d=(uint64_t)(temp_avg_c/AVERAGE_SAMPLES);
+										temp_avg_d=(uint64_t)(temp_avg_c/n_samples_avg);
 										temp_max_d=(uint64_t)(temp_max_c);
 										temp_min_d=(uint64_t)(temp_min_c);
 										temp_avg_c=0;
 										temp_max_c=0;
 										temp_min_c=500;
-										humi_avg_d=(uint64_t)(humi_avg_c/AVERAGE_SAMPLES);
+										humi_avg_d=(uint64_t)(humi_avg_c/n_samples_avg);
 										humi_max_d=(uint64_t)(humi_max_c);
 										humi_min_d=(uint64_t)(humi_min_c);
 										humi_avg_c=0;
 										humi_max_c=0;
-										humi_min_c=500;
+										humi_min_c=1000;
+										n_samples_avg=0;
 
 									}
 								}
-										// temperature and humidity averaging
-								if(mins==30){				//30 minutes sampling
-									temp_avg_c+=temp_current;
-									humi_avg_c+=humi_current;
-
-								}
 										//update the led on next minute after start/time adjustment...
 								if(hours < led_start_time || hours >= (led_start_time+running_cycle)){
-									rgb_pixel=convert_inten_pixel(G_INTEN_MIN,R_INTEN_MIN,B_INTEN_MIN);
-									chalo_batti(rgb_pixel);
+									grb_pixel=convert_inten_pixel(G_INTEN_MIN,R_INTEN_MIN,B_INTEN_MIN);
+									chalo_batti(grb_pixel);
+									rgb_pixel=convert_inten_pixel(R_INTEN_MIN,G_INTEN_MIN,B_INTEN_MIN);
+									chalo_batti_2(rgb_pixel);
 								}
 								else{
-									rgb_pixel=convert_inten_pixel(g_inten,r_inten,b_inten);
-									chalo_batti(rgb_pixel);
+									grb_pixel=convert_inten_pixel(g_inten,r_inten,b_inten);
+									chalo_batti(grb_pixel);
+									rgb_pixel=convert_inten_pixel(r_inten,g_inten,b_inten);
+									chalo_batti_2(rgb_pixel);
 								}
 								time_formatted=(hours*100)+mins;
 							}

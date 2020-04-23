@@ -84,7 +84,7 @@ void decode_rgb_mode(void){
 
 }
 
-void chalo_batti(uint32_t intensity){
+void chalo_batti(uint32_t intensity){	//GRB
 	int 		outer_loop_var=0,inner_loop_var=0;
 	uint32_t	extracted_bit=0;
 
@@ -115,3 +115,32 @@ void chalo_batti(uint32_t intensity){
 
 }
 
+void chalo_batti_2(uint32_t intensity){ 				//RGB!!!
+	int 		outer_loop_var=0,inner_loop_var=0;
+	uint32_t	extracted_bit=0;
+
+			//reset signal
+	GPIO->P[PWM_PORT].DOUTSET |= (1 << PWM_PIN_2);
+	delay_5_33us(200);
+	GPIO->P[PWM_PORT].DOUTCLR |= (1 << PWM_PIN_2);
+	delay_5_33us(200);
+	GPIO->P[PWM_PORT].DOUTSET |= (1 << PWM_PIN_2);
+			//Alhumdulilah led control
+	for(outer_loop_var=0;outer_loop_var<LED_COUNT_2;outer_loop_var++){
+		for(inner_loop_var=0;inner_loop_var<PIXEL_SIZE;inner_loop_var++){
+			extracted_bit=(uint32_t)(0x00800000 & intensity<<inner_loop_var);
+			GPIO->P[PWM_PORT].DOUTSET |= (1 << PWM_PIN_2);
+			if(extracted_bit){
+				precise_delay(4);
+				GPIO->P[PWM_PORT].DOUTCLR |= (1 << PWM_PIN_2);
+				precise_delay(5);
+			}else{
+				precise_delay(2);
+				GPIO->P[PWM_PORT].DOUTCLR |= (1 << PWM_PIN_2);
+				precise_delay(7);
+			}
+
+		}
+
+	}
+}

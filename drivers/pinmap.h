@@ -44,6 +44,7 @@
 
 	//pins
 #define 	PWM_PIN				6			//PD6 <->	To breadboard
+#define 	PWM_PIN_2			5			//PD5 <->	To breadboard
 #define 	DHT_PIN				7			//PD7 <->	To breadboard
 //#define 	LT_SW_FRONT			11			//PB11 <->	Not used
 //#define 	LT_SW_REAR			12			//PB12 <->	Not used

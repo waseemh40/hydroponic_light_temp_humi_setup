@@ -29,6 +29,7 @@ void gpio_init(void){
 	GPIO_DriveModeSet(PWM_PORT,gpioDriveModeHigh );
 			//outputs
 	GPIO_PinModeSet(PWM_PORT, PWM_PIN, gpioModePushPull, 0);
+	GPIO_PinModeSet(PWM_PORT, PWM_PIN_2, gpioModePushPull, 0);
 	GPIO_PinModeSet(OUT_PORT, LED, gpioModePushPull, 0);
 	GPIO_PinModeSet(OUT_PORT, LED_2, gpioModePushPull, 0);
 	GPIO_PinModeSet(DHT_PORT, DHT_PIN, gpioModePushPull, 1);
