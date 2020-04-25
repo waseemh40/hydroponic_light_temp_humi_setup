@@ -54,9 +54,9 @@ typedef enum {	sm_current=0,
 				//time related
 volatile	uint8_t		sample_counter=0;
 volatile	uint64_t	seconds=0;
-volatile	uint8_t		mins=0,hours=0;
+volatile	uint8_t		mins=00,hours=7;
 volatile	uint8_t		days_count=0;
-volatile	uint8_t		running_cycle=14;		//default value of 14 hrs
+volatile	uint8_t		running_cycle=16;		//default value of 16 hrs
 volatile	uint8_t		led_start_time=7;		//7 am is start time
 volatile	uint64_t	time_formatted=0;
 
@@ -80,6 +80,11 @@ volatile	uint64_t	humi_min_d=0;
 volatile	uint64_t	humi_max_d=0;
 volatile	uint8_t		n_samples_avg=0;
 
+volatile	uint8_t		display_counter=0;
+volatile	uint8_t		activity_counter=0;
+
+
+
 
 			char 		rs232_buf[128];
 			char 		lcd_buf[32];
@@ -90,6 +95,7 @@ volatile	uint8_t		n_samples_avg=0;
  * shared external functions
  */
 void 	inc_dec_irq_handler(uint8_t irq_number){
+	activity_counter=0;
 	if(irq_number==RIGHT_SW){
 		right_pressed=true;
 		switch(menu_mode){
@@ -244,6 +250,7 @@ int main(void)
 						if(sample_counter>=10){
 							sample_counter=0;
 							seconds++;
+							activity_counter++;
 							if(seconds>59){
 								seconds=0;
 								mins++;
@@ -331,6 +338,33 @@ int main(void)
 							menu_display();
 							right_pressed=false;left_pressed=false;
 
+						}
+						if(seconds%4==0 && sample_counter==0 && activity_counter>=30 && right_pressed==false && left_pressed==false){
+							switch(display_counter){
+							case 0:
+								menu_mode=d_time;
+								submenu_time=sm_time;
+								break;
+							case 1:
+								menu_mode=d_temp;
+								submenu_temp_humi=sm_current;
+								break;
+							case 2:
+								menu_mode=d_humi;
+								submenu_temp_humi=sm_current;
+								break;
+							default:
+								display_counter=0;
+								break;
+							}
+							display_counter++;
+							if(display_counter>2){
+								display_counter=0;
+							}
+							if(activity_counter>30){
+								activity_counter=30;
+							}
+							menu_display();
 						}
 
 					}

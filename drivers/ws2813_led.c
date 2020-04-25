@@ -131,13 +131,13 @@ void chalo_batti_2(uint32_t intensity){ 				//RGB!!!
 			extracted_bit=(uint32_t)(0x00800000 & intensity<<inner_loop_var);
 			GPIO->P[PWM_PORT].DOUTSET |= (1 << PWM_PIN_2);
 			if(extracted_bit){
-				precise_delay(4);
+				precise_delay(5);
 				GPIO->P[PWM_PORT].DOUTCLR |= (1 << PWM_PIN_2);
 				precise_delay(5);
 			}else{
 				precise_delay(2);
 				GPIO->P[PWM_PORT].DOUTCLR |= (1 << PWM_PIN_2);
-				precise_delay(7);
+				precise_delay(8);
 			}
 
 		}
